@@ -1,0 +1,171 @@
+#!/usr/bin/env python
+
+# ----- imports -----
+import os
+import json
+from pathlib import Path
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, Gio, Gdk
+
+
+# ----- variables ------
+opj = os.path.join
+g_ui_bld = None
+g_win = None
+expose_home = "EH_RO"
+expose_root = "EH_D"
+user_prefs_defaults = {
+    "expose_home": "EH_RO",
+    "expose_root": "EH_D"
+}
+
+
+# ----- functions -----
+
+
+def get_file_loc():
+    # get the current path on disk
+    this_loc = os.path.dirname(os.path.abspath(__file__))
+    return this_loc
+
+
+def load_user_preferences():
+    # test if the $HOME/.config/umtp-responder-gui/user_prefs.json file exists
+    # make it if not, load the prefs if it is
+    user_home = Path.home()
+    urg_upd = Path(f"{user_home}/.config/umtp-responder-gui/")
+    upj = Path(f"{user_home}/.config/umtp-responder-gui/user_prefs.json")
+    if not Path.exists(upj):
+        if not Path.exists(urg_upd):
+            # make the directory
+            Path.mkdir(urg_upd)
+        else:
+            # create the file and store defaults
+            defaults_json = json.dumps(user_prefs_defaults)
+            with open(upj, "w") as f:
+                f.write(defaults_json)
+    else:
+        with open(upj, "r") as f:
+            data = f.read()
+            saved_prefs = json.loads(data)
+            global expose_home
+            global expose_root
+            expose_home = saved_prefs["expose_home"]
+            expose_root = saved_prefs["expose_root"]
+
+
+def setup_ui_builder():
+    glade_file = opj(get_file_loc(), "ui/main_window_ui.glade")
+    builder = Gtk.Builder()
+    builder.add_from_file(glade_file)
+    handlers = {
+        "onDestroy": Gtk.main_quit,
+        "on_ExposeHomeReadOnlyRadialButton_toggled": set_expose_home_state,
+        "on_ExposeHomeReadWriteRadialButton_toggled": set_expose_home_state,
+        "on_ExposeHomeDisabledRadialButton_toggled": set_expose_home_state,
+        "on_ExposeRootReadOnlyRadialButton_toggled": set_expose_root_state,
+        "on_ExposeRootReadWriteRadialButton_toggled": set_expose_root_state,
+        "on_ExposeRootDisabledRadialButton_toggled": set_expose_root_state,
+        "on_SaveButton_clicked": save_settings,
+    }
+    builder.connect_signals(handlers)
+    return builder
+
+
+def setup_window(ui_bld):
+    window = ui_bld.get_object("MainWin")
+    # window.set_default_size(1142, 571)
+    # window.set_title("Icon Explorer")
+    headerbar = ui_bld.get_object("HeaderBar")
+    window.set_position(Gtk.WindowPosition.CENTER)
+    return window
+
+
+def set_global_refs(ui_bld, win):
+    global g_ui_bld
+    g_ui_bld = ui_bld
+    global g_win
+    g_win = win
+
+
+def set_expose_home_state(expose_home_widget):
+    # print(f"state widget name is: {expose_home_widget.get_name()}")
+    global expose_home
+    expose_home = expose_home_widget.get_name()
+
+
+def set_expose_root_state(expose_root_widget):
+    # print(f"state widget name is: {expose_root_widget.get_name()}")
+    global expose_root
+    expose_root = expose_root_widget.get_name()
+
+
+def save_settings(save_button_widget):
+    # build the conf file from the base+ appropriate tail template(s)
+    conf_file = build_the_conf_file()
+
+    # write the file to disk
+    write_the_conf_to_disk(conf_file)
+
+    # restart the umtp-responder service
+    restart_umtp_service()
+
+
+def build_the_conf_file():
+    # load the base template
+    # load the expose_home template
+    # load the expose_root template
+    base_template = opj(get_file_loc(), "templates/base")
+    home_template = opj(get_file_loc(), f"templates/{expose_home}")
+    root_template = opj(get_file_loc(), f"templates/{expose_root}")
+    with open(base_template, "r") as f:
+        bt = f.read()
+    with open(home_template, "r") as f:
+        ht = f.read()
+    with open(root_template, "r") as f:
+        rt = f.read()
+    return bt + ht + rt
+
+
+def write_the_conf_to_disk(cf):
+    uh = Path.home()
+    cf_orig = f"{uh}/.config/umtp-responder-gui/umtprd.conf"
+    cf_bk = f"{uh}/.config/umtp-responder-gui/umtprd.conf.bk"
+    # move the existing conf file to a backup
+    os.rename(cf_orig, cf_bk)
+    # write the new conf file to disk
+    with open(cf_orig, "w") as f:
+        f.write(cf)
+
+
+def restart_umtp_service():
+    pass
+
+
+# ------ classes -----
+
+
+# ----- main -----
+
+def main():
+    # connect the ui
+    b = setup_ui_builder()
+    # load saved setting
+    load_user_preferences()
+
+    # instantiate the window
+    w = setup_window(b)
+
+    # set global refs for builder and window
+    set_global_refs(b, w)
+
+    # make window visible
+    w.show_all()
+
+    # run the whole thing
+    Gtk.main()
+
+
+if __name__ == '__main__':
+    main()
