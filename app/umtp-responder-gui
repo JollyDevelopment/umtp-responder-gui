@@ -78,7 +78,8 @@ def setup_window(ui_bld):
     # window.set_default_size(1142, 571)
     # window.set_title("Icon Explorer")
     headerbar = ui_bld.get_object("HeaderBar")
-    window.set_position(Gtk.WindowPosition.CENTER)
+    # window.set_position(Gtk.WindowPosition.CENTER)
+    window.fullscreen()
     return window
 
 
