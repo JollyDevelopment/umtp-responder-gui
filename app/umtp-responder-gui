@@ -3,10 +3,12 @@
 # ----- imports -----
 import os
 import json
+# import subprocess
 from pathlib import Path
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gio, Gdk
+from utils.helpers import RowItem
 
 
 # ----- variables ------
@@ -15,9 +17,9 @@ g_ui_bld = None
 g_win = None
 expose_home = "EH_RO"
 expose_root = "EH_D"
+service_state = "disabled"
 user_prefs_defaults = {
-    "expose_home": "EH_RO",
-    "expose_root": "EH_D"
+    "/tmp": "ro"
 }
 
 
@@ -67,6 +69,14 @@ def setup_ui_builder():
         "on_ExposeRootReadOnlyRadialButton_toggled": set_expose_root_state,
         "on_ExposeRootReadWriteRadialButton_toggled": set_expose_root_state,
         "on_ExposeRootDisabledRadialButton_toggled": set_expose_root_state,
+        "on_EnabledRadioButton_toggled": set_service_state,
+        "on_DisabledRadioButton_toggled": set_service_state,
+        "on_StartButton_clicked": start_service,
+        "on_StopButton_clicked": stop_service,
+        "on_RestartButton_clicked": restart_service,
+        "on_PlusButton_clicked": choose_new_folder,
+        "on_CancelFolderButton_clicked": cancel_new_folder_dialog,
+        "on_SelectFolderButton_clicked": select_new_folder,
         "on_SaveButton_clicked": save_settings,
     }
     builder.connect_signals(handlers)
@@ -74,12 +84,9 @@ def setup_ui_builder():
 
 
 def setup_window(ui_bld):
-    window = ui_bld.get_object("MainWin")
-    # window.set_default_size(1142, 571)
-    # window.set_title("Icon Explorer")
-    headerbar = ui_bld.get_object("HeaderBar")
-    # window.set_position(Gtk.WindowPosition.CENTER)
-    window.fullscreen()
+    # window = ui_bld.get_object("MainWin")
+    window = ui_bld.get_object("AppWin")
+    window.maximize()
     return window
 
 
@@ -104,13 +111,15 @@ def set_expose_root_state(expose_root_widget):
 
 def save_settings(save_button_widget):
     # build the conf file from the base+ appropriate tail template(s)
-    conf_file = build_the_conf_file()
+    # conf_file = build_the_conf_file()
 
     # write the file to disk
-    write_the_conf_to_disk(conf_file)
+    # write_the_conf_to_disk(conf_file)
 
     # restart the umtp-responder service
-    restart_umtp_service()
+    # restart_umtp_service()
+    print("save button clicked")
+    print(service_state)
 
 
 def build_the_conf_file():
@@ -140,11 +149,55 @@ def write_the_conf_to_disk(cf):
         f.write(cf)
 
 
-def restart_umtp_service():
-    pass
+def set_service_state(service_widget):
+    global service_state
+    service_state = service_widget.get_name()
+    # print(service_state)
 
 
-# ------ classes -----
+def start_service(start_service_widget):
+    print("start service clicked")
+
+
+def stop_service(stop_service_widget):
+    print("stop service clicked")
+
+
+def restart_service(restart_service_widget):
+    print("restart service clicked")
+
+
+def choose_new_folder(plus_button_widget):
+    print("plus button clicked")
+    b = g_ui_bld
+    fcd = b.get_object("FolderChooserDialog")
+    fcd.show()
+
+
+def cancel_new_folder_dialog(cancel_folder_chooser_widget):
+    b = g_ui_bld
+    fcd = b.get_object("FolderChooserDialog")
+    fcd.hide()
+
+
+def select_new_folder(select_folder_chooser_widget):
+    print("folder select button pressed")
+    b = g_ui_bld
+    fcd = b.get_object("FolderChooserDialog")
+    print(fcd.get_uri())
+
+
+def add_list_items(ui_bld, win):
+    l = ui_bld.get_object("FolderListBox")
+    lbr = Gtk.ListBoxRow.new()
+    testrowitem = RowItem("/tmp2","ro")
+    lbr.add(testrowitem.build_row())
+    lbr.show()
+    l.add(lbr)
+
+
+
+# ------ helpers.py -----
 
 
 # ----- main -----
@@ -160,6 +213,9 @@ def main():
 
     # set global refs for builder and window
     set_global_refs(b, w)
+
+    # add the list items from stored settings
+    add_list_items(b, w)
 
     # make window visible
     w.show_all()
