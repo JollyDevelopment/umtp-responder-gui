@@ -25,8 +25,8 @@ class RowItem(object):
         self.folder_path = folder_path
         self.access_level = access_level
         self.d_radio_button = Gtk.RadioButton.new_with_label(None, "D")
-        self.rw_radio_button = Gtk.RadioButton.new_with_label([self.d_radio_button], "RW")
-        self.ro_radio_button = Gtk.RadioButton.new_with_label([self.d_radio_button], "RO")
+        self.rw_radio_button = Gtk.RadioButton.new_with_label(None, "RW")
+        self.ro_radio_button = Gtk.RadioButton.new_with_label(None, "RO")
         self.choices_hbox = Gtk.Box.new(Gtk.Orientation(0), 3)  # 0 == horizontal
         self.whole_hbox = Gtk.Box.new(Gtk.Orientation(0), 3)  # 0 == horizontal
         self.label = Gtk.Label.new(self.folder_path)
@@ -47,6 +47,16 @@ class RowItem(object):
         self.choices_hbox.show()
         self.label.show()
         self.whole_hbox.show()
+        # give the widgets names
+        self.d_radio_button.set_name("disabled")
+        self.rw_radio_button.set_name("rw")
+        self.ro_radio_button.set_name("ro")
+        self.choices_hbox.set_name("choices")
+        # add the ro/rw buttons to the disabled buttons group
+        self.ro_radio_button.join_group(self.d_radio_button)
+        self.rw_radio_button.join_group(self.d_radio_button)
+        # set the access toggle
+        self.set_access_level_toggle()
         # add the radio buttons to the choices box
         self.choices_hbox.add(self.d_radio_button)
         self.choices_hbox.add(self.rw_radio_button)
@@ -54,5 +64,17 @@ class RowItem(object):
         # add the choices box and the label to the whole box
         self.whole_hbox.add(self.label)
         self.whole_hbox.add(self.choices_hbox)
+        # set the whole_box to be homogenous (so both children take up the same space)
+        self.whole_hbox.set_homogeneous(True)
         # return the whole box to be added as a listrow item
         return self.whole_hbox
+
+    def set_access_level_toggle(self):
+        # check the access_level, set the corresponding radio button as toggled
+        if self.access_level == "ro":
+            self.ro_radio_button.set_active(True)
+        elif self.access_level == "rw":
+            self.rw_radio_button.set_active(True)
+        else:
+            self.d_radio_button.set_active(True)
+

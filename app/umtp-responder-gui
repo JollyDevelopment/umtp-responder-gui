@@ -15,11 +15,15 @@ from utils.helpers import RowItem
 opj = os.path.join
 g_ui_bld = None
 g_win = None
-expose_home = "EH_RO"
-expose_root = "EH_D"
-service_state = "disabled"
+service_state = "disabled"  # default state, overridden when user_prefs are loaded
+exposed_folders = [
+    {"index": 0, "path": "/tmp", "access_level": "ro"}
+]  # default folder, overridden when user_prefs are loaded
 user_prefs_defaults = {
-    "/tmp": "ro"
+    "exposed_folders": [
+        {"index": 0, "path": "/tmp", "access_level": "ro"}
+    ],
+    "service_state": "disabled"
 }
 
 
@@ -51,10 +55,10 @@ def load_user_preferences():
         with open(upj, "r") as f:
             data = f.read()
             saved_prefs = json.loads(data)
-            global expose_home
-            global expose_root
-            expose_home = saved_prefs["expose_home"]
-            expose_root = saved_prefs["expose_root"]
+            global service_state
+            global exposed_folders
+            service_state = saved_prefs["service_state"]
+            exposed_folders = saved_prefs["exposed_folders"]
 
 
 def setup_ui_builder():
@@ -63,12 +67,6 @@ def setup_ui_builder():
     builder.add_from_file(glade_file)
     handlers = {
         "onDestroy": Gtk.main_quit,
-        "on_ExposeHomeReadOnlyRadialButton_toggled": set_expose_home_state,
-        "on_ExposeHomeReadWriteRadialButton_toggled": set_expose_home_state,
-        "on_ExposeHomeDisabledRadialButton_toggled": set_expose_home_state,
-        "on_ExposeRootReadOnlyRadialButton_toggled": set_expose_root_state,
-        "on_ExposeRootReadWriteRadialButton_toggled": set_expose_root_state,
-        "on_ExposeRootDisabledRadialButton_toggled": set_expose_root_state,
         "on_EnabledRadioButton_toggled": set_service_state,
         "on_DisabledRadioButton_toggled": set_service_state,
         "on_StartButton_clicked": start_service,
@@ -110,6 +108,40 @@ def set_expose_root_state(expose_root_widget):
 
 
 def save_settings(save_button_widget):
+    folders_to_save_to_disk = []
+    # get the list items from folderlistbox
+    global g_ui_bld
+    flb = g_ui_bld.get_object("FolderListBox")
+    for c in flb.get_children():
+        # from each child get the
+        # path,
+        # the access_level (basically the selected toggle in the gui)
+        # and the index in the listbox
+        c_path = c.get_name()
+        c_index = c.get_index()
+        c_access_level = get_row_item_access_level(c)
+        print(f" child path: {c_path}")
+        print(f" child index {c_index}")
+        print(f" child access {c_access_level}")
+        # create the dict to hold that info
+        c_dict = {"index": c_index, "path": c_path, "access_level": c_access_level}
+        # append those to the list
+        folders_to_save_to_disk.append(c_dict)
+
+    # save the folders to the user_prefs
+    # set the path
+    user_home = Path.home()
+    upj = Path(f"{user_home}/.config/umtp-responder-gui/user_prefs.json")
+    # create the dict
+    prefs_to_save = {
+        "service_state": service_state,
+        "exposed_folders": folders_to_save_to_disk
+    }
+    # write that to disk
+    with open(upj, "w") as f:
+        prefs = json.dumps(prefs_to_save)
+        f.write(prefs)
+
     # build the conf file from the base+ appropriate tail template(s)
     # conf_file = build_the_conf_file()
 
@@ -118,8 +150,8 @@ def save_settings(save_button_widget):
 
     # restart the umtp-responder service
     # restart_umtp_service()
-    print("save button clicked")
-    print(service_state)
+    # print("save button clicked")
+    # print(service_state)
 
 
 def build_the_conf_file():
@@ -181,21 +213,65 @@ def cancel_new_folder_dialog(cancel_folder_chooser_widget):
 
 
 def select_new_folder(select_folder_chooser_widget):
-    print("folder select button pressed")
+    # print("folder select button pressed")
     b = g_ui_bld
     fcd = b.get_object("FolderChooserDialog")
-    print(fcd.get_uri())
+    # print(fcd.get_uri())
+    # get the folder uri
+    f_uri = fcd.get_uri()
+    # strip off the 'file://' bit
+    fpath = f_uri[7:]
+    # add a new rowitem for that path
+    add_single_item_to_list(fpath)
+    # hide the folderchooserdialog
+    fcd.hide()
 
 
-def add_list_items(ui_bld, win):
-    l = ui_bld.get_object("FolderListBox")
+def add_stored_list_items(ui_bld, win):
+    # connect to the ListBox
+    flb = ui_bld.get_object("FolderListBox")
+    # loop through the exposed_folders
+    # make a new listrowbox make a RowItem
+    # add all the rowitems to the folderlistbox
+    for i in exposed_folders:
+        lbr = Gtk.ListBoxRow.new()
+        ri = RowItem(i["path"], i["access_level"])
+        lbr.add(ri.build_row())
+        lbr.set_name(i["path"])  # set the name of the row widget to be the folder path
+        lbr.set_halign(Gtk.Align(3))  # set the rowitem to be CENTER alignment
+        lbr.set_activatable(False)
+        lbr.set_selectable(False)
+        lbr.show()
+        flb.insert(lbr, i["index"])
+
+
+def add_single_item_to_list(folder_path):
+    # connect to the ListBox
+    global g_ui_bld
+    flb = g_ui_bld.get_object("FolderListBox")
     lbr = Gtk.ListBoxRow.new()
-    testrowitem = RowItem("/tmp2","ro")
-    lbr.add(testrowitem.build_row())
+    ri = RowItem(folder_path, "disabled")
+    lbr.add(ri.build_row())
+    lbr.set_name(folder_path)  # set the name of the row widget to be the folder path
+    lbr.set_halign(Gtk.Align(3))  # set the rowitem to be CENTER alignment
+    lbr.set_activatable(False)
+    lbr.set_selectable(False)
     lbr.show()
-    l.add(lbr)
+    flb.add(lbr)
 
 
+def get_row_item_access_level(row_item_widget):
+    # loop through th listitemrow widget's children
+    # get the "choices" widget (which holds the toggle buttons
+    # loop through the choices widget's children and find the one that is
+    # active, and return that one's name
+    for lbr in row_item_widget.get_children():
+        # this should be the whole_box widget from the RowItem class
+        for c in lbr.get_children():
+            if c.get_name() == "choices":
+                for k in c.get_children():
+                    if k.get_active():
+                        return k.get_name()
 
 # ------ helpers.py -----
 
@@ -215,7 +291,7 @@ def main():
     set_global_refs(b, w)
 
     # add the list items from stored settings
-    add_list_items(b, w)
+    add_stored_list_items(b, w)
 
     # make window visible
     w.show_all()
