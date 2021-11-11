@@ -20,9 +20,9 @@ case $1 in
       systemctl restart umtp-responder.service
       ;;
     enable)
-      systemctl enable --now umtp-responder.service
+      systemctl enable umtp-responder.service
       ;;
     disable)
-      systemctl stop umtp-responder.service
+      systemctl disable umtp-responder.service
       ;;
 esac
