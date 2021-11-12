@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=uMTP-Responder-Control
+Exec=/opt/umtp-responder-gui/umtp-responder-gui
+Icon=drive—removable-media

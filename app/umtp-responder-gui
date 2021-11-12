@@ -188,21 +188,21 @@ def set_service_state(service_widget):
     service_state = service_widget.get_name()
     # actually enable or disable the service
     if service_state == "enabled":
-        subprocess.run(['pkexec', 'umtp-responder-control' 'enable'])
+        subprocess.run(['pkexec', 'umtp-responder-control', 'enable'])
     else:
-        subprocess.run(['pkexec', 'umtp-responder-control' 'disable'])
+        subprocess.run(['pkexec', 'umtp-responder-control', 'disable'])
 
 
 def start_service(start_service_widget):
-    subprocess.run(['pkexec', 'umtp-responder-control' 'start'])
+    subprocess.run(['pkexec', 'umtp-responder-control', 'start'])
 
 
 def stop_service(stop_service_widget):
-    subprocess.run(['pkexec', 'umtp-responder-control' 'stop'])
+    subprocess.run(['pkexec', 'umtp-responder-control', 'stop'])
 
 
 def restart_service(restart_service_widget):
-    subprocess.run(['pkexec', 'umtp-responder-control' 'restart'])
+    subprocess.run(['pkexec', 'umtp-responder-control', 'restart'])
 
 
 def choose_new_folder(plus_button_widget):

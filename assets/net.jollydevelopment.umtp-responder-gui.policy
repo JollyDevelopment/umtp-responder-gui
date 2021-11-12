@@ -4,7 +4,7 @@
  "http://www.freedesktop.org/software/polkit/policyconfig-1.dtd">
 <policyconfig>
 
-  <vendor>DanctNIX Tweaks</vendor>
+  <vendor>JollyDevelopment</vendor>
 
   <action id="net.jollydevelopment.umtp-responder-gui.pkexec.apply">
     <description>Apply settings</description>
