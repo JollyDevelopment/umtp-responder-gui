@@ -27,23 +27,27 @@ class RowItem(object):
         self.d_radio_button = Gtk.RadioButton.new_with_label(None, "D")
         self.rw_radio_button = Gtk.RadioButton.new_with_label(None, "RW")
         self.ro_radio_button = Gtk.RadioButton.new_with_label(None, "RO")
+        self.del_button = Gtk.Button.new_from_icon_name("edit-delete-remove", Gtk.IconSize(4))
         self.choices_hbox = Gtk.Box.new(Gtk.Orientation(0), 3)  # 0 == horizontal
         self.whole_hbox = Gtk.Box.new(Gtk.Orientation(0), 3)  # 0 == horizontal
-        self.label = Gtk.Label.new(self.folder_path)
+        self.overall_hbox = Gtk.Box.new(Gtk.Orientation(0), 3) # 0 == horizontal
+        self.label = Gtk.Label.new(self.get_display_name())
 
     # create the list item
-    # hbox (2 children)(horizontal
+    # hbox (3 children)(horizontal)
     # \-label
     # \-hbox (3 children)(horizontal)
     #   \-radio button "RO"
     #   \-radio button "RW"
     #   \-radio button "D"
+    # \-button (delete)
 
     def build_row(self):
         # show() all the bits
         self.d_radio_button.show()
         self.rw_radio_button.show()
         self.ro_radio_button.show()
+        self.del_button.show()
         self.choices_hbox.show()
         self.label.show()
         self.whole_hbox.show()
@@ -52,6 +56,9 @@ class RowItem(object):
         self.rw_radio_button.set_name("rw")
         self.ro_radio_button.set_name("ro")
         self.choices_hbox.set_name("choices")
+        self.del_button.set_name("delete")
+        # add some space to the left of the del button
+        self.del_button.set_margin_start(5)  # 5 pixels
         # add the ro/rw buttons to the disabled buttons group
         self.ro_radio_button.join_group(self.d_radio_button)
         self.rw_radio_button.join_group(self.d_radio_button)
@@ -66,8 +73,11 @@ class RowItem(object):
         self.whole_hbox.add(self.choices_hbox)
         # set the whole_box to be homogenous (so both children take up the same space)
         self.whole_hbox.set_homogeneous(True)
+        # add the whole box and the del button to the overall box
+        self.overall_hbox.add(self.whole_hbox)
+        self.overall_hbox.add(self.del_button)
         # return the whole box to be added as a listrow item
-        return self.whole_hbox
+        return self.overall_hbox
 
     def set_access_level_toggle(self):
         # check the access_level, set the corresponding radio button as toggled
@@ -78,3 +88,6 @@ class RowItem(object):
         else:
             self.d_radio_button.set_active(True)
 
+    def get_display_name(self):
+        path_split = self.folder_path.split('/')
+        return path_split.pop((len(path_split) - 1))

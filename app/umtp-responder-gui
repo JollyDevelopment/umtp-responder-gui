@@ -272,12 +272,14 @@ def get_row_item_access_level(row_item_widget):
     # loop through the choices widget's children and find the one that is
     # active, and return that one's name
     for lbr in row_item_widget.get_children():
-        # this should be the whole_box widget from the RowItem class
-        for c in lbr.get_children():
-            if c.get_name() == "choices":
-                for k in c.get_children():
-                    if k.get_active():
-                        return k.get_name()
+        # this is the overall_box
+        for ob in lbr.get_children():
+            # this should be the whole_box widget from the RowItem class
+            for c in ob.get_children():
+                if c.get_name() == "choices":
+                    for k in c.get_children():
+                        if k.get_active():
+                            return k.get_name()
 
 
 # ----- main -----

@@ -39,7 +39,7 @@ usb_epin_path  "/dev/ffs-mtp/ep1"
 usb_epout_path "/dev/ffs-mtp/ep2"
 usb_epint_path "/dev/ffs-mtp/ep3"
 
-usb_max_packet_size 0x20
+usb_max_packet_size 0x200
 
 #
 # storage command : Create add a storage entry point. Up to 16 entry points supported
