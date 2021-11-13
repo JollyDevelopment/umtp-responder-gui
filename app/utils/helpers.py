@@ -60,6 +60,7 @@ class RowItem(object):
         self.del_button.set_name("delete")
         # add some space to the left of the del button
         self.del_button.set_margin_start(5)  # 5 pixels
+        self.del_button.set_halign(Gtk.Align(2))  # align to the right
         # add the ro/rw buttons to the disabled buttons group
         self.ro_radio_button.join_group(self.d_radio_button)
         self.rw_radio_button.join_group(self.d_radio_button)
@@ -92,3 +93,6 @@ class RowItem(object):
     def get_display_name(self):
         path_split = self.folder_path.split('/')
         return path_split.pop((len(path_split) - 1))
+
+    def get_del_button_reference(self):
+        return self.del_button

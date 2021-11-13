@@ -206,7 +206,6 @@ def restart_service(restart_service_widget):
 
 
 def choose_new_folder(plus_button_widget):
-    print("plus button clicked")
     b = g_ui_bld
     fcd = b.get_object("FolderChooserDialog")
     fcd.show()
@@ -234,6 +233,7 @@ def select_new_folder(select_folder_chooser_widget):
 
 
 def add_stored_list_items(ui_bld, win):
+    # print("adding stored items")
     # connect to the ListBox
     flb = ui_bld.get_object("FolderListBox")
     # loop through the exposed_folders
@@ -243,6 +243,12 @@ def add_stored_list_items(ui_bld, win):
         lbr = Gtk.ListBoxRow.new()
         ri = RowItem(i["path"], i["access_level"])
         lbr.add(ri.build_row())
+        # get the del_button reference in the row
+        # connect it's 'clicked' signal to the delete_row_item function
+        # it needs to pass the index as part of the c_data
+        c_data = {"deleted_row": i["index"]}
+        db = ri.get_del_button_reference()
+        db.connect("clicked", delete_row_item, c_data)
         lbr.set_name(i["path"])  # set the name of the row widget to be the folder path
         lbr.set_halign(Gtk.Align(3))  # set the rowitem to be CENTER alignment
         lbr.set_activatable(False)
@@ -257,6 +263,18 @@ def add_single_item_to_list(folder_path):
     flb = g_ui_bld.get_object("FolderListBox")
     lbr = Gtk.ListBoxRow.new()
     ri = RowItem(folder_path, "disabled")
+    # get the number of children in the listbox already
+    num = len(flb.get_children())
+    # print(f"add single num == {num}")
+    # get the del_button reference in the row
+    # connect it's 'clicked' signal to the delete_row_item function
+    # it needs to pass the index as part of the c_data
+    # since the list/index starts at 0, then the number of children will be
+    # the next index number. ie if there are two children, then the first one's index is
+    # 0, the second one's index is 1, and the new row here then is index 2 (same as num)
+    c_data = {"deleted_row": num}
+    db = ri.get_del_button_reference()
+    db.connect("clicked", delete_row_item, c_data)
     lbr.add(ri.build_row())
     lbr.set_name(folder_path)  # set the name of the row widget to be the folder path
     lbr.set_halign(Gtk.Align(3))  # set the rowitem to be CENTER alignment
@@ -280,6 +298,19 @@ def get_row_item_access_level(row_item_widget):
                     for k in c.get_children():
                         if k.get_active():
                             return k.get_name()
+
+
+def delete_row_item(widget, callback_data):
+    # print(f"del button clieckd. widget: {widget} and c_data: {callback_data}")
+    # connect to the listbox
+    global g_ui_bld
+    flb = g_ui_bld.get_object("FolderListBox")
+    # get the row at the index in the callback_data
+    r = flb.get_row_at_index(callback_data["deleted_row"])
+    # destroy that row (this is only visual, the save button will
+    # need to be clicked to keep the change, otherwise the row
+    # will be recreated from stored settings
+    r.destroy()
 
 
 # ----- main -----
