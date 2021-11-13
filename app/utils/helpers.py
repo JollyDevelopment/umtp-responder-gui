@@ -51,6 +51,7 @@ class RowItem(object):
         self.choices_hbox.show()
         self.label.show()
         self.whole_hbox.show()
+        self.overall_hbox.show()
         # give the widgets names
         self.d_radio_button.set_name("disabled")
         self.rw_radio_button.set_name("rw")
