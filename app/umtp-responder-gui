@@ -97,17 +97,8 @@ def setup_ui_builder():
 def setup_window(ui_bld):
     # window = ui_bld.get_object("MainWin")
     window = ui_bld.get_object("AppWin")
-    # window.maximize()
+    window.maximize()
     return window
-
-
-def get_and_set_screen_dimensions(win):
-    screen = win.get_screen()
-    display = screen.get_display()
-    mon_0 = display.get_monitor(0)
-    geo = mon_0.get_geometry()
-    # dimensions = {"w": geo.width, "h": geo.height}
-    win.resize(geo.width, geo.height)
 
 
 def set_global_refs(ui_bld, win):
@@ -178,6 +169,9 @@ def save_settings(save_button_widget):
     # write the file to disk
     write_the_conf_to_disk(conf_file)
 
+    # update the config
+    subprocess.run(['pkexec', 'umtp-responder-control', 'update'])
+
 
 def write_the_conf_to_disk(cf):
     uh = Path.home()
@@ -224,7 +218,6 @@ def cancel_new_folder_dialog(cancel_folder_chooser_widget):
     b = g_ui_bld
     fcd = b.get_object("FolderChooserDialog")
     fcd.hide()
-    get_and_set_screen_dimensions(g_win)
 
 
 def select_new_folder(select_folder_chooser_widget):
@@ -240,7 +233,6 @@ def select_new_folder(select_folder_chooser_widget):
     add_single_item_to_list(fpath)
     # hide the folderchooserdialog
     fcd.hide()
-    get_and_set_screen_dimensions(g_win)
 
 
 def add_stored_list_items(ui_bld, win):
@@ -332,9 +324,6 @@ def main():
 
     # instantiate the window
     w = setup_window(b)
-
-    # get screen dimensions
-    get_and_set_screen_dimensions(w)
 
     # set global refs for builder and window
     set_global_refs(b, w)
