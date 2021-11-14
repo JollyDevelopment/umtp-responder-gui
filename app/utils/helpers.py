@@ -27,7 +27,8 @@ class RowItem(object):
         self.d_radio_button = Gtk.RadioButton.new_with_label(None, "D")
         self.rw_radio_button = Gtk.RadioButton.new_with_label(None, "RW")
         self.ro_radio_button = Gtk.RadioButton.new_with_label(None, "RO")
-        self.del_button = Gtk.Button.new_from_icon_name("edit-delete-remove", Gtk.IconSize(4))
+        # self.del_button = Gtk.Button.new_from_icon_name("edit-delete-remove", Gtk.IconSize(4))
+        self.del_button = Gtk.Button.new_with_label("X")
         self.choices_hbox = Gtk.Box.new(Gtk.Orientation(0), 3)  # 0 == horizontal
         self.whole_hbox = Gtk.Box.new(Gtk.Orientation(0), 3)  # 0 == horizontal
         self.overall_hbox = Gtk.Box.new(Gtk.Orientation(0), 3) # 0 == horizontal
